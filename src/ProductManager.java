@@ -1,14 +1,9 @@
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.OptionalDouble;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.IntStream;
+
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.summingDouble;
 
 public class ProductManager {
 
@@ -55,7 +50,9 @@ public class ProductManager {
   // calculate total value
   //double totalValue = manager.calculateTotalValue(product -> product.getPrice() * product.getStock());
   public double calculateTotalValue(Function<Product, Double> valueFunction) {
+
     return products.values().stream().mapToDouble(valueFunction::apply).sum();
+
   }
 
   public void registerOrderNumberSupplier(String supplierId, Supplier<String> supplier) {
@@ -101,17 +98,35 @@ public class ProductManager {
     System.out.println("Ordered products:");
     order.getOrderDetails();
     System.out.println("Total Amount: " + order.getTotalAmount());
+    String[] strings = products.values().stream().toArray(String[]::new);
+
+    IntStream ints = generateIntStream1();
+    int[] ints1 = ints.toArray();
+
+
+
   }
 
+  public static IntStream generateIntStream1() {
+    return IntStream.of(1, 4, 9, 16, 25, 36, 49, 64, 81, 100);
+  }
+
+
   public List<Product> getActiveProductsSortedByPrice() {
+
     // ProductStatus'ü ACTIVE olan ürünleri fiyatlarına göre sıralayıp döndüren metodu yazın
-    return null;
+    return  products.values().stream().filter(product -> ProductStatus.ACTIVE.equals(product.getProductStatus()))
+            .sorted((Comparator.comparingDouble(Product::getPrice))).toList();
   }
 
   public double calculateAveragePriceInCategory(String category) {
     // String olarak verilen category'e ait olan ürünlerin fiyatlarının ortalamasını yoksa 0.0 döndüren metodu yazın
     // tip: OptionalDouble kullanımını inceleyin.
-    return 0.0;
+
+    return products.entrySet().stream()
+            .filter(product -> product.getValue().getCategory().equals(category))
+            .mapToDouble(product -> product.getValue().getPrice()).average().orElse(0.0);
+
   }
 
   public Map<String, Double> getCategoryPriceSum() {
@@ -120,6 +135,7 @@ public class ProductManager {
     // örn:
     // category-1 105.2
     // category-2 45.0
-    return null;
+    return products.values().stream()
+            .collect(groupingBy(Product::getCategory, summingDouble(product -> product.getPrice() * product.getStock())));
   }
 }
